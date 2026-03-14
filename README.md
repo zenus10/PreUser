@@ -1,6 +1,6 @@
 # PreUser
 
-**PRD Automated Stress Testing Platform** — Upload your PRD, get 1000 users. PreUser simulates real user behavior before your product ships.
+**PRD Automated Stress Testing Platform** — Upload your PRD, get 10 ai users. PreUser simulates real user behavior before your product ships.
 
 **English** | [中文](./README.zh.md)
 
@@ -36,13 +36,13 @@
 
 ### 5-Stage Analysis Pipeline
 
-| Stage | Name | Description |
-|-------|------|-------------|
-| Chain 1 | Structure Parsing | Splits the PRD into semantic blocks |
+| Stage         | Name                               | Description                                                  |
+| ------------- | ---------------------------------- | ------------------------------------------------------------ |
+| Chain 1       | Structure Parsing                  | Splits the PRD into semantic blocks                          |
 | Chain 2 / 2.5 | Relation Extraction & Graph Fusion | Extracts feature dependencies and builds the knowledge graph |
-| Chain 3 | Persona Generation | Generates diverse virtual users from the graph |
-| Chain 4 | Narrative Simulation | Simulates multi-scenario operation paths per user |
-| Chain 5 | Report Generation | Aggregates discovered blind spots and bottlenecks |
+| Chain 3       | Persona Generation                 | Generates diverse virtual users from the graph               |
+| Chain 4       | Narrative Simulation               | Simulates multi-scenario operation paths per user            |
+| Chain 5       | Report Generation                  | Aggregates discovered blind spots and bottlenecks            |
 
 Each stage supports **checkpointing** — a failed run resumes from the last successful stage.
 
@@ -151,21 +151,21 @@ PreUser/
 
 ## Configuration Reference
 
-| Variable | Description | Default |
-|---------|-------------|---------|
-| `DEEPSEEK_API_KEY` | DeepSeek API key | (required) |
-| `ANTHROPIC_API_KEY` | Anthropic API key (optional) | — |
-| `LLM_MODEL` | LLM model identifier | `deepseek/deepseek-chat` |
-| `LLM_TEMPERATURE` | Generation temperature | `0.7` |
-| `DB_HOST` | PostgreSQL host | `localhost` |
-| `DB_PORT` | PostgreSQL port | `5432` |
-| `DB_NAME` | Database name | `vul` |
-| `DB_USER` | Database username | `postgres` |
-| `DB_PASSWORD` | Database password | (required) |
-| `REDIS_HOST` | Redis host | `localhost` |
-| `REDIS_PORT` | Redis port | `6379` |
-| `MAX_UPLOAD_SIZE_MB` | Max upload file size | `10` |
-| `MAX_CONCURRENT_ANALYSES` | Max concurrent analyses | `3` |
+| Variable                  | Description                  | Default                  |
+| ------------------------- | ---------------------------- | ------------------------ |
+| `DEEPSEEK_API_KEY`        | DeepSeek API key             | (required)               |
+| `ANTHROPIC_API_KEY`       | Anthropic API key (optional) | —                        |
+| `LLM_MODEL`               | LLM model identifier         | `deepseek/deepseek-chat` |
+| `LLM_TEMPERATURE`         | Generation temperature       | `0.7`                    |
+| `DB_HOST`                 | PostgreSQL host              | `localhost`              |
+| `DB_PORT`                 | PostgreSQL port              | `5432`                   |
+| `DB_NAME`                 | Database name                | `vul`                    |
+| `DB_USER`                 | Database username            | `postgres`               |
+| `DB_PASSWORD`             | Database password            | (required)               |
+| `REDIS_HOST`              | Redis host                   | `localhost`              |
+| `REDIS_PORT`              | Redis port                   | `6379`                   |
+| `MAX_UPLOAD_SIZE_MB`      | Max upload file size         | `10`                     |
+| `MAX_CONCURRENT_ANALYSES` | Max concurrent analyses      | `3`                      |
 
 ## Switching LLM Models
 
