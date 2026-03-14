@@ -5,6 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie,
 } from 'recharts'
 import { useProjectStore } from '../store/useProjectStore'
+import { useLang } from '../i18n/LanguageContext'
 
 const SEVERITY_BADGE: Record<string, string> = {
   high: 'bg-red-100 text-red-700',
@@ -16,6 +17,7 @@ const PIE_COLORS = ['#ef4444', '#f59e0b', '#6366f1', '#10b981', '#8b5cf6', '#ec4
 
 export default function ReportPage() {
   const navigate = useNavigate()
+  const { t } = useLang()
   const projectId = useProjectStore((s) => s.projectId)
   const report = useProjectStore((s) => s.report)
   const fetchAnalysis = useProjectStore((s) => s.fetchAnalysis)
@@ -27,7 +29,7 @@ export default function ReportPage() {
   }, [projectId, navigate, report, fetchAnalysis])
 
   if (!report) {
-    return <div className="flex items-center justify-center h-64 text-gray-400">加载中...</div>
+    return <div className="flex items-center justify-center h-64 text-gray-400">{t('report_loading')}</div>
   }
 
   const churnData = Object.entries(report.churn_attribution).map(([key, val]) => ({
@@ -58,9 +60,13 @@ export default function ReportPage() {
       {/* Header with NPS */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-800">压力测试报告</h2>
+          <h2 className="text-xl font-bold text-gray-800">{t('report_title')}</h2>
           <p className="text-sm text-gray-500 mt-1">
-            发现 {report.blind_spots.length} 个设计盲区 · {report.bottlenecks.length} 个体验瓶颈 · {report.assumption_risks.length} 个假设风险
+            {t('report_summary', {
+              blindSpots: report.blind_spots.length,
+              bottlenecks: report.bottlenecks.length,
+              risks: report.assumption_risks.length,
+            })}
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -68,11 +74,11 @@ export default function ReportPage() {
             onClick={() => navigate('/chat?mode=report_qa')}
             className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
           >
-            追问报告
+            {t('report_ask')}
           </button>
           <div className="text-center">
             <div className={`text-3xl font-bold ${npsColor}`}>{report.nps_average.toFixed(1)}</div>
-            <div className="text-xs text-gray-400">模拟 NPS</div>
+            <div className="text-xs text-gray-400">{t('report_nps_label')}</div>
           </div>
         </div>
       </div>
@@ -90,7 +96,7 @@ export default function ReportPage() {
       {/* Report Sections (v2.0) */}
       {report.sections && report.sections.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-base font-bold text-gray-800">详细报告章节</h3>
+          <h3 className="text-base font-bold text-gray-800">{t('report_sections_title')}</h3>
           {report.sections.map((section, i) => (
             <div key={i} className="bg-white rounded-xl border border-gray-100 overflow-hidden">
               <button
@@ -98,7 +104,9 @@ export default function ReportPage() {
                 className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
               >
                 <span className="font-medium text-gray-800">{section.title}</span>
-                <span className="text-gray-400 text-sm">{expandedSections.has(i) ? '收起' : '展开'}</span>
+                <span className="text-gray-400 text-sm">
+                  {expandedSections.has(i) ? t('report_collapse') : t('report_expand')}
+                </span>
               </button>
               {expandedSections.has(i) && (
                 <div className="px-4 pb-4 border-t border-gray-50">
@@ -108,7 +116,7 @@ export default function ReportPage() {
                   {section.reasoning_trace && (
                     <details className="mt-3">
                       <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">
-                        推理过程
+                        {t('report_reasoning')}
                       </summary>
                       <p className="text-xs text-gray-500 mt-1 bg-gray-50 rounded p-2 whitespace-pre-wrap">
                         {section.reasoning_trace}
@@ -135,13 +143,13 @@ export default function ReportPage() {
       <div className="grid grid-cols-2 gap-6">
         {satData.length > 0 && (
           <div className="bg-white rounded-xl border border-gray-100 p-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">功能满意度均值</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('report_sat_chart')}</h3>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={satData} layout="vertical" margin={{ left: 60 }}>
                 <XAxis type="number" domain={[0, 10]} tick={{ fontSize: 11 }} />
                 <YAxis type="category" dataKey="feature" tick={{ fontSize: 11 }} width={80} />
                 <Tooltip />
-                <Bar dataKey="avg" radius={[0, 4, 4, 0]} name="满意度">
+                <Bar dataKey="avg" radius={[0, 4, 4, 0]}>
                   {satData.map((entry, i) => (
                     <Cell key={i} fill={entry.avg >= 7 ? '#10b981' : entry.avg >= 5 ? '#f59e0b' : '#ef4444'} />
                   ))}
@@ -153,7 +161,7 @@ export default function ReportPage() {
 
         {churnData.length > 0 && (
           <div className="bg-white rounded-xl border border-gray-100 p-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">流失归因分布</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('report_churn_chart')}</h3>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
@@ -178,7 +186,7 @@ export default function ReportPage() {
       </div>
 
       {/* Blind Spots */}
-      <Section title="设计盲区发现" count={report.blind_spots.length} icon="?">
+      <Section title={t('report_blind_spots')} count={report.blind_spots.length} icon="?">
         {report.blind_spots.map((bs, i) => (
           <motion.div
             key={i}
@@ -190,20 +198,20 @@ export default function ReportPage() {
             <div className="flex items-start justify-between gap-2 mb-2">
               <h4 className="font-medium text-gray-800">{bs.title}</h4>
               <span className="text-xs text-gray-400 shrink-0">
-                影响 {bs.affected_personas.length} 个角色
+                {t('report_affects', { n: bs.affected_personas.length })}
               </span>
             </div>
             <p className="text-sm text-gray-600 mb-3">{bs.description}</p>
             {bs.evidence.length > 0 && (
               <div className="mb-3">
-                <span className="text-xs text-gray-400">证据：</span>
+                <span className="text-xs text-gray-400">{t('report_evidence')}</span>
                 {bs.evidence.map((e, j) => (
                   <p key={j} className="text-xs text-gray-500 italic ml-2">"{e}"</p>
                 ))}
               </div>
             )}
             <div className="bg-green-50 rounded-lg px-3 py-2">
-              <span className="text-xs text-green-700 font-medium">建议：</span>
+              <span className="text-xs text-green-700 font-medium">{t('report_recommendation')}</span>
               <p className="text-sm text-green-700">{bs.recommendation}</p>
             </div>
           </motion.div>
@@ -211,7 +219,7 @@ export default function ReportPage() {
       </Section>
 
       {/* Bottlenecks */}
-      <Section title="体验瓶颈排序" count={report.bottlenecks.length} icon="!">
+      <Section title={t('report_bottlenecks')} count={report.bottlenecks.length} icon="!">
         {report.bottlenecks.map((bn, i) => (
           <motion.div
             key={i}
@@ -226,7 +234,7 @@ export default function ReportPage() {
               </span>
               <h4 className="font-medium text-gray-800">{bn.title}</h4>
               <span className="text-xs text-gray-400 ml-auto">
-                {bn.affected_count} 人受影响 · {bn.stage}阶段
+                {t('report_affected_count', { n: bn.affected_count })} · {bn.stage} {t('report_stage')}
               </span>
             </div>
             <p className="text-sm text-gray-600 mb-2">{bn.description}</p>
@@ -242,7 +250,7 @@ export default function ReportPage() {
       </Section>
 
       {/* Assumption Risks */}
-      <Section title="假设风险清单" count={report.assumption_risks.length} icon="!">
+      <Section title={t('report_risks')} count={report.assumption_risks.length} icon="!">
         {report.assumption_risks.map((ar, i) => (
           <motion.div
             key={i}
@@ -259,11 +267,11 @@ export default function ReportPage() {
             </div>
             <div className="grid grid-cols-2 gap-3 mt-2">
               <div className="bg-gray-50 rounded-lg p-2">
-                <span className="text-xs text-gray-400">反面证据</span>
+                <span className="text-xs text-gray-400">{t('report_counter_evidence')}</span>
                 <p className="text-sm text-gray-600">{ar.counter_evidence}</p>
               </div>
               <div className="bg-red-50 rounded-lg p-2">
-                <span className="text-xs text-red-400">如果假设不成立</span>
+                <span className="text-xs text-red-400">{t('report_if_wrong')}</span>
                 <p className="text-sm text-red-700">{ar.if_wrong}</p>
               </div>
             </div>

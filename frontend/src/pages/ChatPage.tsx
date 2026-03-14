@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from 'react'
 import { useProjectStore } from '../store/useProjectStore'
 import { useSearchParams } from 'react-router-dom'
+import { useLang } from '../i18n/LanguageContext'
 import * as api from '../api/client'
-import type { ConversationMessage, Persona } from '../api/types'
+import type { ConversationMessage } from '../api/types'
 
 type ChatMode = 'interview' | 'focus_group' | 'report_qa'
 
 export default function ChatPage() {
   const { projectId, personas, analysis } = useProjectStore()
+  const { t } = useLang()
   const [searchParams] = useSearchParams()
 
   const initialMode = (searchParams.get('mode') as ChatMode) || 'interview'
@@ -79,7 +81,7 @@ export default function ChatPage() {
   if (!projectId || !analysisId) {
     return (
       <div className="flex items-center justify-center h-full text-gray-400">
-        请先上传 PRD 并完成分析
+        {t('chat_no_project')}
       </div>
     )
   }
@@ -88,16 +90,16 @@ export default function ChatPage() {
   if (!conversationId) {
     return (
       <div className="max-w-2xl mx-auto space-y-6">
-        <h2 className="text-xl font-bold text-gray-900">深度交互</h2>
+        <h2 className="text-xl font-bold text-gray-900">{t('chat_title')}</h2>
 
         {/* Mode selector */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">对话模式</label>
+          <label className="text-sm font-medium text-gray-700">{t('chat_mode_label')}</label>
           <div className="flex gap-3">
             {([
-              { value: 'interview', label: '一对一访谈', desc: '与单个虚拟用户深入对话' },
-              { value: 'focus_group', label: '焦点小组', desc: '多个用户讨论同一话题' },
-              { value: 'report_qa', label: '报告追问', desc: '对报告发现追问' },
+              { value: 'interview', label: t('chat_mode_interview'), desc: t('chat_mode_interview_desc') },
+              { value: 'focus_group', label: t('chat_mode_focus_group'), desc: t('chat_mode_focus_group_desc') },
+              { value: 'report_qa', label: t('chat_mode_report_qa'), desc: t('chat_mode_report_qa_desc') },
             ] as const).map((m) => (
               <button
                 key={m.value}
@@ -119,7 +121,7 @@ export default function ChatPage() {
         {mode !== 'report_qa' && (
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">
-              选择角色 {mode === 'interview' ? '(1个)' : '(2-5个)'}
+              {t('chat_select_persona')} {mode === 'interview' ? t('chat_select_one') : t('chat_select_multi')}
             </label>
             <div className="grid grid-cols-2 gap-2">
               {personas.map((p) => {
@@ -144,7 +146,7 @@ export default function ChatPage() {
                   >
                     <div className="font-medium text-sm">{p.name}</div>
                     <div className="text-xs text-gray-500">
-                      {p.age}岁 · {p.occupation}
+                      {p.age}{t('chat_age_unit')} · {p.occupation}
                     </div>
                     <span
                       className={`inline-block mt-1 text-xs px-1.5 py-0.5 rounded ${
@@ -165,12 +167,12 @@ export default function ChatPage() {
         {/* Topic input (for focus_group) */}
         {mode === 'focus_group' && (
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">讨论话题</label>
+            <label className="text-sm font-medium text-gray-700">{t('chat_topic_label')}</label>
             <input
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="例如：你们觉得这个定价方案怎么样？"
+              placeholder={t('chat_topic_placeholder')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
@@ -185,7 +187,7 @@ export default function ChatPage() {
           }
           className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? '正在创建...' : '开始对话'}
+          {loading ? t('chat_starting') : t('chat_start')}
         </button>
       </div>
     )
@@ -203,12 +205,12 @@ export default function ChatPage() {
           }}
           className="text-sm text-gray-500 hover:text-gray-700"
         >
-          &larr; 返回
+          {t('chat_back')}
         </button>
         <span className="text-sm font-medium text-gray-700">
-          {mode === 'interview' && `与 ${personaMap.get(selectedPersonas[0])?.name || '未知'} 对话`}
-          {mode === 'focus_group' && `焦点小组 (${selectedPersonas.length}人)`}
-          {mode === 'report_qa' && '报告追问'}
+          {mode === 'interview' && t('chat_with', { name: personaMap.get(selectedPersonas[0])?.name || '?' })}
+          {mode === 'focus_group' && t('chat_focus_group', { n: selectedPersonas.length })}
+          {mode === 'report_qa' && t('chat_report_qa')}
         </span>
       </div>
 
@@ -238,7 +240,7 @@ export default function ChatPage() {
         {loading && (
           <div className="flex justify-start">
             <div className="bg-gray-100 rounded-2xl px-4 py-2.5 text-gray-400 text-sm">
-              正在思考...
+              {t('chat_thinking')}
             </div>
           </div>
         )}
@@ -253,11 +255,7 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            placeholder={
-              mode === 'report_qa'
-                ? '对报告内容提问...'
-                : '输入你的问题...'
-            }
+            placeholder={mode === 'report_qa' ? t('chat_input_report') : t('chat_input_default')}
             className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             disabled={loading}
           />
@@ -266,7 +264,7 @@ export default function ChatPage() {
             disabled={loading || !input.trim()}
             className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
           >
-            发送
+            {t('chat_send')}
           </button>
         </div>
       </div>

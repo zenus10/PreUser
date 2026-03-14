@@ -13,6 +13,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useProjectStore } from '../store/useProjectStore'
+import { useLang } from '../i18n/LanguageContext'
 import type { GraphNode, GraphEdge, Conflict } from '../api/types'
 
 // Node type colors
@@ -28,6 +29,7 @@ const TYPE_COLORS: Record<string, { bg: string; border: string; text: string }> 
 const DEFAULT_COLOR = { bg: '#F9FAFB', border: '#9CA3AF', text: '#374151' }
 
 export default function GraphPage() {
+  const { t } = useLang()
   const analysis = useProjectStore((s) => s.analysis)
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
   const [showConflicts, setShowConflicts] = useState(true)
@@ -36,7 +38,7 @@ export default function GraphPage() {
   if (!graphData) {
     return (
       <div className="flex items-center justify-center h-full text-gray-400">
-        请先完成分析以查看知识图谱
+        {t('graph_no_analysis')}
       </div>
     )
   }
@@ -147,7 +149,7 @@ export default function GraphPage() {
       <div className="flex-1 bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
           <h2 className="text-sm font-bold text-gray-700">
-            知识图谱 ({rawNodes.length} 实体, {rawEdges.length} 关系)
+            {t('graph_title')} ({rawNodes.length} {t('graph_entities')}, {rawEdges.length} {t('graph_relations')})
           </h2>
           <div className="flex items-center gap-4">
             {/* Legend */}
@@ -169,7 +171,7 @@ export default function GraphPage() {
                 onChange={(e) => setShowConflicts(e.target.checked)}
                 className="rounded"
               />
-              显示冲突
+              {t('graph_show_conflicts')}
             </label>
           </div>
         </div>
@@ -213,7 +215,7 @@ export default function GraphPage() {
               <h3 className="text-lg font-bold text-gray-900 mt-1">{selectedNode.name}</h3>
               <p className="text-sm text-gray-600 mt-1">{selectedNode.description}</p>
               <p className="text-xs text-gray-400 mt-1">
-                来源: {selectedNode.source_block_id}
+                {t('graph_source')} {selectedNode.source_block_id}
               </p>
             </div>
 
@@ -221,7 +223,7 @@ export default function GraphPage() {
             {relatedEdges.length > 0 && (
               <div>
                 <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                  关联关系 ({relatedEdges.length})
+                  {t('graph_related_edges')} ({relatedEdges.length})
                 </h4>
                 <div className="space-y-1.5">
                   {relatedEdges.map((e, i) => {
@@ -255,7 +257,7 @@ export default function GraphPage() {
             {relatedConflicts.length > 0 && (
               <div>
                 <h4 className="text-xs font-bold text-red-500 uppercase tracking-wider mb-2">
-                  冲突 ({relatedConflicts.length})
+                  {t('graph_conflicts')} ({relatedConflicts.length})
                 </h4>
                 <div className="space-y-2">
                   {relatedConflicts.map((c, i) => (
@@ -283,7 +285,7 @@ export default function GraphPage() {
           </div>
         ) : (
           <div className="p-4 text-center text-gray-400 text-sm">
-            点击图谱中的节点查看详情
+            {t('graph_click_hint')}
           </div>
         )}
       </div>

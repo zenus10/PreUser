@@ -1,23 +1,25 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { useProjectStore } from '../store/useProjectStore'
-
-const NAV_ITEMS = [
-  { to: '/', label: '上传 PRD', icon: '📄', always: true },
-  { to: '/progress', label: '分析进度', icon: '⏳', always: false },
-  { to: '/graph', label: '知识图谱', icon: '🔗', always: false },
-  { to: '/personas', label: '虚拟用户', icon: '👥', always: false },
-  { to: '/narratives', label: '体验叙事', icon: '📖', always: false },
-  { to: '/report', label: '压测报告', icon: '📊', always: false },
-  { to: '/chat', label: '深度交互', icon: '💬', always: false },
-]
+import { useLang } from '../i18n/LanguageContext'
 
 export default function Layout() {
   const projectId = useProjectStore((s) => s.projectId)
   const status = useProjectStore((s) => s.status)
   const filename = useProjectStore((s) => s.filename)
   const location = useLocation()
+  const { lang, setLang, t } = useLang()
 
   const isCompleted = status === 'completed'
+
+  const NAV_ITEMS = [
+    { to: '/', label: t('nav_upload'), icon: '📄', always: true },
+    { to: '/progress', label: t('nav_progress'), icon: '⏳', always: false },
+    { to: '/graph', label: t('nav_graph'), icon: '🔗', always: false },
+    { to: '/personas', label: t('nav_personas'), icon: '👥', always: false },
+    { to: '/narratives', label: t('nav_narratives'), icon: '📖', always: false },
+    { to: '/report', label: t('nav_report'), icon: '📊', always: false },
+    { to: '/chat', label: t('nav_chat'), icon: '💬', always: false },
+  ]
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -25,13 +27,30 @@ export default function Layout() {
       <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-bold text-indigo-600">PreUser v2.0</h1>
-          <span className="text-xs text-gray-400">PRD 自动化压力测试平台</span>
+          <span className="text-xs text-gray-400">{t('appSubtitle')}</span>
         </div>
-        {filename && (
-          <span className="text-sm text-gray-500 truncate max-w-xs">
-            {filename}
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {filename && (
+            <span className="text-sm text-gray-500 truncate max-w-xs">
+              {filename}
+            </span>
+          )}
+          {/* Language toggle */}
+          <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden text-xs">
+            <button
+              onClick={() => setLang('zh')}
+              className={`px-2.5 py-1 transition-colors ${lang === 'zh' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+            >
+              中文
+            </button>
+            <button
+              onClick={() => setLang('en')}
+              className={`px-2.5 py-1 transition-colors ${lang === 'en' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+            >
+              EN
+            </button>
+          </div>
+        </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">

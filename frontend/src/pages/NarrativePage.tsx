@@ -3,22 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 import { useProjectStore } from '../store/useProjectStore'
+import { useLang } from '../i18n/LanguageContext'
 import type { SimulationResult } from '../api/types'
-
-const OUTCOME_LABELS: Record<string, { label: string; color: string }> = {
-  completed: { label: '完成', color: 'text-green-600' },
-  churned: { label: '流失', color: 'text-red-600' },
-  confused: { label: '困惑', color: 'text-amber-600' },
-  evaluating: { label: '观望', color: 'text-blue-600' },
-  inactive: { label: '沉默', color: 'text-gray-600' },
-}
-
-const SCENE_LABELS: Record<string, string> = {
-  first_use: '首次体验',
-  deep_use: '深度使用',
-  competitor: '竞品对比',
-  churn: '流失前夕',
-}
 
 const SEVERITY_COLORS: Record<string, string> = {
   high: 'bg-red-100 text-red-700 border-red-200',
@@ -28,11 +14,27 @@ const SEVERITY_COLORS: Record<string, string> = {
 
 export default function NarrativePage() {
   const navigate = useNavigate()
+  const { t } = useLang()
   const projectId = useProjectStore((s) => s.projectId)
   const personas = useProjectStore((s) => s.personas)
   const simulations = useProjectStore((s) => s.simulations)
   const fetchAnalysis = useProjectStore((s) => s.fetchAnalysis)
   const [selectedIdx, setSelectedIdx] = useState<number>(0)
+
+  const OUTCOME_LABELS: Record<string, { label: string; color: string }> = {
+    completed: { label: t('narrative_outcome_completed'), color: 'text-green-600' },
+    churned: { label: t('narrative_outcome_churned'), color: 'text-red-600' },
+    confused: { label: t('narrative_outcome_confused'), color: 'text-amber-600' },
+    evaluating: { label: t('narrative_outcome_evaluating'), color: 'text-blue-600' },
+    inactive: { label: t('narrative_outcome_inactive'), color: 'text-gray-600' },
+  }
+
+  const SCENE_LABELS: Record<string, string> = {
+    first_use: t('narrative_scene_first_use'),
+    deep_use: t('narrative_scene_deep_use'),
+    competitor: t('narrative_scene_competitor'),
+    churn: t('narrative_scene_churn'),
+  }
 
   useEffect(() => {
     if (!projectId) { navigate('/', { replace: true }); return }
@@ -43,11 +45,11 @@ export default function NarrativePage() {
   const persona = sim ? personas.find((p) => p.persona_id === sim.persona_id) : undefined
 
   if (simulations.length === 0) {
-    return <div className="flex items-center justify-center h-64 text-gray-400">加载中...</div>
+    return <div className="flex items-center justify-center h-64 text-gray-400">{t('narrative_loading')}</div>
   }
 
   const emotionData = sim?.emotion_curve.map((val, idx) => ({
-    step: `步骤${idx + 1}`,
+    step: `#${idx + 1}`,
     emotion: val,
   })) ?? []
 
@@ -57,12 +59,12 @@ export default function NarrativePage() {
     <div className="flex gap-6 h-full">
       {/* Persona + scene tabs */}
       <div className="w-52 shrink-0 overflow-y-auto">
-        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-3">仿真结果</h3>
+        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-3">{t('narrative_results_title')}</h3>
         <div className="space-y-1">
           {simulations.map((s, i) => {
             const p = personas.find((pp) => pp.persona_id === s.persona_id)
             const isActive = i === selectedIdx
-            const sceneName = SCENE_LABELS[s.scene] || s.scene || '首次体验'
+            const sceneName = SCENE_LABELS[s.scene] || s.scene || t('narrative_scene_first_use')
             return (
               <button
                 key={i}
@@ -103,7 +105,7 @@ export default function NarrativePage() {
           <div className="flex items-center gap-4">
             <h2 className="text-lg font-bold">{persona?.name || sim.persona_id}</h2>
             <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">
-              {SCENE_LABELS[sim.scene] || sim.scene || '首次体验'}
+              {SCENE_LABELS[sim.scene] || sim.scene || t('narrative_scene_first_use')}
             </span>
             <span className={`text-sm font-medium ${outcomeInfo?.color}`}>{outcomeInfo?.label}</span>
             <span className="text-sm text-gray-400">NPS: {sim.nps_score}/10</span>
@@ -111,14 +113,14 @@ export default function NarrativePage() {
               onClick={() => navigate(`/chat?mode=interview&persona=${sim.persona_id}`)}
               className="ml-auto text-xs px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
             >
-              与 TA 对话
+              {t('narrative_chat_btn')}
             </button>
           </div>
 
           {/* Emotion curve */}
           {emotionData.length > 0 && (
             <div className="bg-white rounded-xl border border-gray-100 p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">情绪曲线</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('narrative_emotion_curve')}</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={emotionData}>
                   <XAxis dataKey="step" tick={{ fontSize: 11 }} />
@@ -131,7 +133,7 @@ export default function NarrativePage() {
                     stroke="#6366f1"
                     strokeWidth={2}
                     dot={{ r: 4, fill: '#6366f1' }}
-                    name="情绪值"
+                    name={t('narrative_emotion_value')}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -142,7 +144,7 @@ export default function NarrativePage() {
           {sim.action_logs && sim.action_logs.length > 0 && (
             <div className="bg-white rounded-xl border border-gray-100 p-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                行为日志 ({sim.action_logs.length} 步)
+                {t('narrative_action_logs')} ({sim.action_logs.length} {t('narrative_steps')})
               </h3>
               <div className="space-y-1.5 max-h-60 overflow-y-auto">
                 {sim.action_logs.map((log, i) => (
@@ -170,7 +172,7 @@ export default function NarrativePage() {
 
           {/* Narrative */}
           <div className="bg-white rounded-xl border border-gray-100 p-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">第一人称叙事</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('narrative_narrative_title')}</h3>
             <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
               {sim.narrative}
             </div>
@@ -180,7 +182,7 @@ export default function NarrativePage() {
           {sim.friction_points.length > 0 && (
             <div className="bg-white rounded-xl border border-gray-100 p-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                摩擦点 ({sim.friction_points.length})
+                {t('narrative_friction_title')} ({sim.friction_points.length})
               </h3>
               <div className="space-y-3">
                 {sim.friction_points.map((fp, i) => (
@@ -205,11 +207,11 @@ export default function NarrativePage() {
           {/* NPS & willingness */}
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white rounded-xl border border-gray-100 p-4">
-              <h4 className="text-xs font-semibold text-gray-400 mb-1">NPS 理由</h4>
+              <h4 className="text-xs font-semibold text-gray-400 mb-1">{t('narrative_nps_reason')}</h4>
               <p className="text-sm text-gray-700">{sim.nps_reason}</p>
             </div>
             <div className="bg-white rounded-xl border border-gray-100 p-4">
-              <h4 className="text-xs font-semibold text-gray-400 mb-1">3天后是否回来</h4>
+              <h4 className="text-xs font-semibold text-gray-400 mb-1">{t('narrative_return_label')}</h4>
               <p className="text-sm text-gray-700">
                 {sim.willingness_to_return.will_return ? 'Yes' : 'No'} — {sim.willingness_to_return.reason}
               </p>

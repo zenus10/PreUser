@@ -2,15 +2,9 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useProjectStore } from '../store/useProjectStore'
+import { useLang } from '../i18n/LanguageContext'
 import * as api from '../api/client'
 import type { Persona, PersonaDimensions } from '../api/types'
-
-const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  core: { label: '核心用户', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
-  cold: { label: '冷漠用户', color: 'text-gray-700', bg: 'bg-gray-50 border-gray-200' },
-  resistant: { label: '受阻用户', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
-  misuser: { label: '歧义用户', color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
-}
 
 function DimensionBar({
   label,
@@ -25,7 +19,7 @@ function DimensionBar({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-gray-500 w-20 shrink-0">{label}</span>
+      <span className="text-xs text-gray-500 w-28 shrink-0">{label}</span>
       {editable ? (
         <input
           type="range"
@@ -54,13 +48,17 @@ function PersonaCard({
   persona,
   selected,
   onClick,
+  typeLabel,
+  typeBg,
+  ageUnit,
 }: {
   persona: Persona
   selected: boolean
   onClick: () => void
+  typeLabel: string
+  typeBg: string
+  ageUnit: string
 }) {
-  const cfg = TYPE_CONFIG[persona.type] || TYPE_CONFIG.core
-
   return (
     <motion.div
       layout
@@ -70,7 +68,7 @@ function PersonaCard({
         p-4 rounded-xl border cursor-pointer transition-all duration-200
         ${selected
           ? 'ring-2 ring-indigo-400 border-indigo-200 bg-white shadow-md'
-          : `${cfg.bg} hover:shadow-sm`
+          : `${typeBg} hover:shadow-sm`
         }
       `}
     >
@@ -80,11 +78,11 @@ function PersonaCard({
         </div>
         <div className="min-w-0">
           <div className="font-medium text-sm truncate">{persona.name}</div>
-          <div className="text-xs text-gray-400">{persona.age}岁 · {persona.occupation}</div>
+          <div className="text-xs text-gray-400">{persona.age}{ageUnit} · {persona.occupation}</div>
         </div>
       </div>
-      <div className={`inline-block text-xs px-2 py-0.5 rounded-full ${cfg.color} ${cfg.bg}`}>
-        {cfg.label}
+      <div className={`inline-block text-xs px-2 py-0.5 rounded-full ${typeBg}`}>
+        {typeLabel}
       </div>
       <p className="text-xs text-gray-500 mt-2 italic line-clamp-2">"{persona.attitude_tag}"</p>
     </motion.div>
@@ -93,10 +91,18 @@ function PersonaCard({
 
 export default function PersonaPage() {
   const navigate = useNavigate()
+  const { t } = useLang()
   const projectId = useProjectStore((s) => s.projectId)
   const personas = useProjectStore((s) => s.personas)
   const fetchAnalysis = useProjectStore((s) => s.fetchAnalysis)
   const status = useProjectStore((s) => s.status)
+
+  const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+    core: { label: t('persona_type_core'), color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
+    cold: { label: t('persona_type_cold'), color: 'text-gray-700', bg: 'bg-gray-50 border-gray-200' },
+    resistant: { label: t('persona_type_resistant'), color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
+    misuser: { label: t('persona_type_misuser'), color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
+  }
 
   const [selected, setSelected] = useState<Persona | null>(null)
   const [editMode, setEditMode] = useState(false)
@@ -137,7 +143,7 @@ export default function PersonaPage() {
   }
 
   const handleDeletePersona = (personaId: string) => {
-    if (!confirm('确定要删除这个角色吗？')) return
+    if (!confirm(t('persona_delete_confirm'))) return
     setEditedPersonas((prev) => prev.filter((p) => p.persona_id !== personaId))
     if (selected?.persona_id === personaId) {
       setSelected(editedPersonas.find((p) => p.persona_id !== personaId) || null)
@@ -154,7 +160,7 @@ export default function PersonaPage() {
       setCustomDescription('')
       setShowCustomInput(false)
     } catch (e: any) {
-      alert('生成失败: ' + e.message)
+      alert(t('persona_gen_failed') + e.message)
     } finally {
       setGenerating(false)
     }
@@ -169,7 +175,7 @@ export default function PersonaPage() {
       setEditMode(false)
       navigate('/progress')
     } catch (e: any) {
-      alert('保存失败: ' + e.message)
+      alert(t('persona_save_failed') + e.message)
     } finally {
       setSaving(false)
     }
@@ -178,7 +184,7 @@ export default function PersonaPage() {
   if (personas.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 text-gray-400">
-        加载中...
+        {t('persona_loading')}
       </div>
     )
   }
@@ -191,7 +197,7 @@ export default function PersonaPage() {
       {/* Top action bar */}
       <div className="flex items-center justify-between mb-4 shrink-0">
         <h2 className="text-lg font-bold text-gray-900">
-          虚拟用户画像 ({displayPersonas.length})
+          {t('persona_title')} ({displayPersonas.length})
         </h2>
         <div className="flex items-center gap-2">
           {!editMode ? (
@@ -200,14 +206,14 @@ export default function PersonaPage() {
                 onClick={() => setEditMode(true)}
                 className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
               >
-                编辑画像
+                {t('persona_edit')}
               </button>
               {status === 'completed' && (
                 <button
                   onClick={() => navigate('/chat?mode=interview&persona=' + (selected?.persona_id || ''))}
                   className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
                 >
-                  对话
+                  {t('persona_chat')}
                 </button>
               )}
             </>
@@ -217,20 +223,20 @@ export default function PersonaPage() {
                 onClick={() => { setEditMode(false); setEditedPersonas([...personas]) }}
                 className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
               >
-                取消
+                {t('persona_cancel')}
               </button>
               <button
                 onClick={() => setShowCustomInput(true)}
                 className="px-3 py-1.5 text-sm border border-indigo-300 text-indigo-600 rounded-lg hover:bg-indigo-50"
               >
-                + 自定义角色
+                {t('persona_add_custom')}
               </button>
               <button
                 onClick={handleSaveAndSimulate}
                 disabled={saving}
                 className="px-4 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
               >
-                {saving ? '保存中...' : '确认并开始仿真'}
+                {saving ? t('persona_saving') : t('persona_save_simulate')}
               </button>
             </>
           )}
@@ -241,14 +247,14 @@ export default function PersonaPage() {
       {showCustomInput && (
         <div className="mb-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100 shrink-0">
           <label className="text-sm font-medium text-gray-700 mb-2 block">
-            描述你想添加的虚拟用户
+            {t('persona_custom_label')}
           </label>
           <div className="flex gap-2">
             <input
               type="text"
               value={customDescription}
               onChange={(e) => setCustomDescription(e.target.value)}
-              placeholder="例如：一个60岁的退休教师，对技术一窍不通，但很想帮孙子买礼物..."
+              placeholder={t('persona_custom_placeholder')}
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
             <button
@@ -256,13 +262,13 @@ export default function PersonaPage() {
               disabled={generating || !customDescription.trim()}
               className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50"
             >
-              {generating ? '生成中...' : '生成'}
+              {generating ? t('persona_generating') : t('persona_generate')}
             </button>
             <button
               onClick={() => { setShowCustomInput(false); setCustomDescription('') }}
               className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700"
             >
-              取消
+              {t('persona_cancel')}
             </button>
           </div>
         </div>
@@ -273,31 +279,43 @@ export default function PersonaPage() {
         <div className="w-72 shrink-0 overflow-y-auto space-y-6">
           {corePersonas.length > 0 && (
             <div>
-              <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">核心画像</h3>
+              <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">{t('persona_section_core')}</h3>
               <div className="space-y-2">
-                {corePersonas.map((p) => (
-                  <PersonaCard
-                    key={p.persona_id}
-                    persona={p}
-                    selected={selected?.persona_id === p.persona_id}
-                    onClick={() => setSelected(p)}
-                  />
-                ))}
+                {corePersonas.map((p) => {
+                  const cfg = TYPE_CONFIG[p.type] || TYPE_CONFIG.core
+                  return (
+                    <PersonaCard
+                      key={p.persona_id}
+                      persona={p}
+                      selected={selected?.persona_id === p.persona_id}
+                      onClick={() => setSelected(p)}
+                      typeLabel={cfg.label}
+                      typeBg={cfg.bg}
+                      ageUnit={t('persona_age_unit')}
+                    />
+                  )
+                })}
               </div>
             </div>
           )}
           {adversarialPersonas.length > 0 && (
             <div>
-              <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">对抗性画像</h3>
+              <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">{t('persona_section_adversarial')}</h3>
               <div className="space-y-2">
-                {adversarialPersonas.map((p) => (
-                  <PersonaCard
-                    key={p.persona_id}
-                    persona={p}
-                    selected={selected?.persona_id === p.persona_id}
-                    onClick={() => setSelected(p)}
-                  />
-                ))}
+                {adversarialPersonas.map((p) => {
+                  const cfg = TYPE_CONFIG[p.type] || TYPE_CONFIG.core
+                  return (
+                    <PersonaCard
+                      key={p.persona_id}
+                      persona={p}
+                      selected={selected?.persona_id === p.persona_id}
+                      onClick={() => setSelected(p)}
+                      typeLabel={cfg.label}
+                      typeBg={cfg.bg}
+                      ageUnit={t('persona_age_unit')}
+                    />
+                  )
+                })}
               </div>
             </div>
           )}
@@ -323,7 +341,7 @@ export default function PersonaPage() {
                   <div>
                     <h2 className="text-lg font-bold">{selected.name}</h2>
                     <p className="text-sm text-gray-500">
-                      {selected.age}岁 · {selected.occupation} ·{' '}
+                      {selected.age}{t('persona_age_unit')} · {selected.occupation} ·{' '}
                       <span className={TYPE_CONFIG[selected.type]?.color}>{TYPE_CONFIG[selected.type]?.label}</span>
                     </p>
                   </div>
@@ -333,7 +351,7 @@ export default function PersonaPage() {
                     onClick={() => handleDeletePersona(selected.persona_id)}
                     className="text-xs text-red-500 hover:text-red-700 px-2 py-1 border border-red-200 rounded"
                   >
-                    删除
+                    {t('persona_delete')}
                   </button>
                 )}
               </div>
@@ -348,30 +366,30 @@ export default function PersonaPage() {
               {/* Dimensions */}
               <div className="mb-6">
                 <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                  四维态度参数
-                  {editMode && <span className="text-xs text-gray-400 font-normal ml-2">(拖动滑块调整)</span>}
+                  {t('persona_dimensions_title')}
+                  {editMode && <span className="text-xs text-gray-400 font-normal ml-2">{t('persona_dimensions_hint')}</span>}
                 </h3>
                 <div className="space-y-2">
                   <DimensionBar
-                    label="技术敏感度"
+                    label={t('persona_dim_tech')}
                     value={selected.dimensions.tech_sensitivity}
                     editable={editMode}
                     onChange={(v) => handleDimensionChange(selected.persona_id, 'tech_sensitivity', v)}
                   />
                   <DimensionBar
-                    label="耐心阈值"
+                    label={t('persona_dim_patience')}
                     value={selected.dimensions.patience_threshold}
                     editable={editMode}
                     onChange={(v) => handleDimensionChange(selected.persona_id, 'patience_threshold', v)}
                   />
                   <DimensionBar
-                    label="付费意愿"
+                    label={t('persona_dim_pay')}
                     value={selected.dimensions.pay_willingness}
                     editable={editMode}
                     onChange={(v) => handleDimensionChange(selected.persona_id, 'pay_willingness', v)}
                   />
                   <DimensionBar
-                    label="替代品依赖"
+                    label={t('persona_dim_alt')}
                     value={selected.dimensions.alt_dependency}
                     editable={editMode}
                     onChange={(v) => handleDimensionChange(selected.persona_id, 'alt_dependency', v)}
@@ -382,25 +400,25 @@ export default function PersonaPage() {
               {/* Background & motivation */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <h4 className="text-xs font-semibold text-gray-400 mb-1">背景</h4>
+                  <h4 className="text-xs font-semibold text-gray-400 mb-1">{t('persona_background')}</h4>
                   <p className="text-sm text-gray-700">{selected.background}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <h4 className="text-xs font-semibold text-gray-400 mb-1">动机</h4>
+                  <h4 className="text-xs font-semibold text-gray-400 mb-1">{t('persona_motivation')}</h4>
                   <p className="text-sm text-gray-700">{selected.motivation}</p>
                 </div>
               </div>
 
               {/* Cognitive model */}
               <div className="mb-6">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">心智模型</h3>
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('persona_cognitive')}</h3>
                 <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3">{selected.cognitive_model}</p>
               </div>
 
               {/* Expected friction points */}
               {selected.expected_friction_points.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">预判摩擦点</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('persona_friction')}</h3>
                   <ul className="space-y-1">
                     {selected.expected_friction_points.map((fp, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
