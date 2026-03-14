@@ -16,6 +16,26 @@
 - **压测报告** — 汇总盲区（blind spots）与瓶颈（bottlenecks），输出可视化报告
 - **深度交互对话** — 基于分析结果的 AI 问答，深入探索产品问题
 
+## Demo
+
+分析工作流：
+
+![屏幕截图 2026-03-14 004322](C:\Users\zzz10\Pictures\Screenshots\屏幕截图 2026-03-14 004322.png)
+
+知识图谱：
+
+![](C:\Users\zzz10\Pictures\Screenshots\屏幕截图 2026-03-14 004427.png)
+
+用户画像：
+
+![屏幕截图 2026-03-14 004442](C:\Users\zzz10\Pictures\Screenshots\屏幕截图 2026-03-14 004442.png)
+
+用户对话：
+
+![屏幕截图 2026-03-14 004615](C:\Users\zzz10\Pictures\Screenshots\屏幕截图 2026-03-14 004615.png)
+
+![屏幕截图 2026-03-14 004729](C:\Users\zzz10\Pictures\Screenshots\屏幕截图 2026-03-14 004729.png)
+
 ## 技术架构
 
 ```
