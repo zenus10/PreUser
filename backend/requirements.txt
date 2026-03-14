@@ -1,0 +1,28 @@
+# Web framework
+fastapi
+uvicorn[standard]
+python-multipart
+
+# LLM
+litellm
+
+# Document parsing
+PyMuPDF
+python-docx
+
+# Data validation
+pydantic
+pydantic-settings
+
+# Database
+asyncpg
+sqlalchemy[asyncio]
+
+# Redis
+redis[hiredis]
+
+# Utilities
+python-dotenv
+httpx
+tenacity
+jinja2
